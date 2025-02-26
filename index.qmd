@@ -5,7 +5,7 @@ format: html
 
 ## Course lessons
 
--Intro to Quatro
+-[Intro to Quatro](scripts/intro to quatro.html)
 -Intro to github
 -Intro to cleaning
 
