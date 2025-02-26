@@ -1,6 +1,15 @@
 ---
-title: "index"
+title: "Great course"
 format: html
 ---
 
-hello
+## Course lessons
+
+-Intro to Quatro
+-Intro to github
+-Intro to cleaning
+
+## Practice lessons
+
+-Practice I
+-Practice II
