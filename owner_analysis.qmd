@@ -39,4 +39,31 @@ library(here)
 lobster_abundance <- read_csv("practice session/data/Lobster_Abundance_All_Years_20220829.csv")
 ```
 
+##convert missing values
+```{r}
+lobster_abundance <- lobster_abundance %>% 
+    mutate(SIZE_MM = na_if(SIZE_MM, -99999))
 ```
+
+##subset with no observ from napl
+```{r}
+not_napl <- lobster_abundance %>% 
+    filter(SITE != "NAPL")
+```
+
+##Create and store a subset with lobsters at Arroyo Quemado (AQUE) AND with a carapace length bigger than 70 mm
+```{r}
+
+aque_70mm <- lobster_abundance %>% 
+    filter(SITE == "AQUE" & SIZE_MM >= 70)
+```
+
+##group and summarize
+```{r}
+# `group_by() %>% summarize()` practice
+
+max_lobster <- lobster_abundance %>% 
+  group_by(SITE, MONTH) %>% 
+  summarize(MAX_LENGTH = max(SIZE_MM, na.rm = TRUE))
+```
+
