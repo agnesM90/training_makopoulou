@@ -30,12 +30,12 @@ You can add options to executable code like this
 ```
 
 The `echo: false` option disables the printing of code (only output is displayed
-
+#downlad packages
 ```{r}
-library(rvest)
+library(rvest)## reads html into a dataframe
 library(readr)
 library(dplyr)
-library(janitor)
+library(janitor)# cleans 
 ```
 ```{r}
 webpage <- rvest::read_html("https://www.pwrc.usgs.gov/BBL/Bander_Portal/login/speclist.php")
@@ -51,7 +51,16 @@ species <- tbls[[1]] %>%
 head(species, 3)
 ```
 
+
+
 #exercise
+#load data with 2 ways
+#read predator data from url test
+
+```{r}
+pred <- read_csv("https://arcticdata.io/metacat/d1/mn/v2/object/urn%3Auuid%3A9ffec04c-7e2d-41dd-9e88-b6c2e8c4375e")
+```
+
 ```{r}
 ## When reading from a file in your data folder in your Rpoj
 nest_data <-  read_csv("data/Utqiagvik_nest_data.csv")
@@ -61,14 +70,6 @@ predator_survey <- read_csv("data/Utqiagvik_predator_surveys.csv")
 egg_measures <- read_csv("data/Utqiagvik_egg_measurements.csv")
 
 
-## When reading using the url
-nest_data <-  read_csv("https://arcticdata.io/metacat/d1/mn/v2/object/urn%3Auuid%3A982bd2fc-4edf-4da7-96ef-0d11b853102d")
-
-predator_survey <- read_csv("https://arcticdata.io/metacat/d1/mn/v2/object/urn%3Auuid%3A9ffec04c-7e2d-41dd-9e88-b6c2e8c4375e")
-
-egg_measures <- read_csv("https://arcticdata.io/metacat/d1/mn/v2/object/urn%3Auuid%3A4b219711-2282-420a-b1d6-1893fe4a74a6")
-
-## Exploring the data (these functions can also be used to explore nest_data & egg_measures) 
 
 colnames(predator_survey)
 glimpse(predator_survey)
@@ -76,13 +77,26 @@ unique(predator_survey$species)
 summary(predator_survey)
 ```
 ```{r}
+#how to translate speciesinto commoon name 
+
 predator_comm_names <- left_join(predator_survey,
                                  species,
                                  by = c("species" = "alpha_code"))
+
+
+```
+#or 
+```{r}
+egg_common_names <- right_join(egg_measures,
+                               species, 
+                               by = c("species" = "alpha_code"))
+
+
 ```
 
 
 
+#question 3 make it as a function
 ```{r}
 assign_species_name <- function(df, species){
     return_df <- left_join(df, species, by = c("species" = "alpha_code"))
@@ -90,7 +104,7 @@ assign_species_name <- function(df, species){
 }
 ```
 
-
+#insert Roxygen skel and adding the necesary description
 
 ```{r}
 #' Title
