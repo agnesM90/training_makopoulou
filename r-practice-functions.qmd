@@ -75,4 +75,38 @@ glimpse(predator_survey)
 unique(predator_survey$species)
 summary(predator_survey)
 ```
+```{r}
+predator_comm_names <- left_join(predator_survey,
+                                 species,
+                                 by = c("species" = "alpha_code"))
+```
+
+
+
+```{r}
+assign_species_name <- function(df, species){
+    return_df <- left_join(df, species, by = c("species" = "alpha_code"))
+    return(return_df)
+}
+```
+
+
+
+```{r}
+#' Title
+#'
+#' @param df A data frame containing BBL species codes in column `species`
+#' @param species A data frame defining BBL species codes with columns `alpha_code` and `common_name` 
+#'
+#' @return A data frame with original data df, plus the common name of species
+#' @export
+#'
+#' @examples `*provide an example*`
+
+
+assign_species_name <- function(df, species){
+    return_df <- left_join(df, species, by = c("species" = "alpha_code"))
+    return(return_df)
+}
+```
 
