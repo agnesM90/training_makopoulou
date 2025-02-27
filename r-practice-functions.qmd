@@ -107,8 +107,7 @@ assign_species_name <- function(df, species){
 #insert Roxygen skel and adding the necesary description
 
 ```{r}
-#' Title
-#'
+
 #' @param df A data frame containing BBL species codes in column `species`
 #' @param species A data frame defining BBL species codes with columns `alpha_code` and `common_name` 
 #'
