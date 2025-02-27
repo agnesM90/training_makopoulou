@@ -124,24 +124,26 @@ assign_species_name <- function(df, species){
 ```
 
 
-
+##Use your function to clean names of each data frame
 ```{r}
-## This is one solution. 
+
 predator_clean <- assign_species_name(predator_survey, species) %>% 
-    select(year, site, date, common_name, count) %>% 
+    select(year, date, common_name) %>% 
     filter(!is.na(common_name))
+View(predator_clean)
 
 nest_location_clean <- assign_species_name(nest_data, species) %>% 
-    select(year, site, nestID, common_name, lat_corrected, long_corrected) %>% 
-    filter(!is.na(common_name))
+    select(year,lat_corrected, long_corrected) 
+View(nest_location_clean)
 
 eggs_clean <- assign_species_name(egg_measures, species) %>% 
-    select(year, site, nestID, common_name, length, width) %>% 
+    select(nestID, common_name, length) %>% 
     filter(!is.na(common_name))
+View(eggs_clean)
 ```
 
 
-#optional
+#optional copy
 ```{r}
 #' Function to add common name to data.frame according to the BBL list of species codes
 
