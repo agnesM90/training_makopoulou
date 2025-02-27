@@ -1,0 +1,345 @@
+---
+title: "visualisation_intro"
+format: html
+editor: visual
+---
+
+## 
+
+```{r}
+library(readr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(janitor)
+library(scales)
+```
+
+```{r}
+escape_raw <- read_csv("https://knb.ecoinformatics.org/knb/d1/mn/v2/object/urn%3Auuid%3Af119a05b-bbe7-4aea-93c6-85434dcb1c5e")
+```
+
+```{r}
+escape <- escape_raw %>% 
+    janitor::clean_names()
+
+
+```
+
+#filter
+
+```{r}
+annual_esc <- escape %>%
+    filter(species %in% c("Chinook", "Sockeye", "Chum", "Coho", "Pink")) %>% #keep only these species
+    mutate(year = lubridate::year(sample_date)) %>% #has a new column with only the year
+    group_by(species, sasap_region, year) %>%  #groups with these 3 columns
+    summarize(escapement = sum(daily_count)) # add new column the daily count
+
+head(annual_esc)
+```
+
+#plots
+
+```{r}
+## Option 1 - data and mapping called in the ggplot() function
+ggplot(data = annual_esc,
+       aes(x = species, y = escapement)) +
+    geom_col()
+
+## Option 2 - data called in ggplot function; mapping called in geom
+ggplot(data = annual_esc) +
+    geom_col(aes(x = species, y = escapement))
+
+
+## Option 3 - data and mapping called in geom
+ggplot() +
+    geom_col(data = annual_esc,
+             aes(x = species, y = escapement))
+```
+
+#lines
+
+```{r}
+annual_esc %>%
+    filter(species == "Sockeye",
+           sasap_region == "Bristol Bay") %>%
+    ggplot(aes(x = year, y = escapement)) +
+    geom_line() +
+    geom_point()
+```
+
+#boxplots
+
+```{r}
+annual_esc %>%
+    filter(year == 1974,
+          species %in% c("Chum", "Pink")) %>%
+    ggplot(aes(x = species, y = escapement)) +
+    geom_boxplot()
+```
+
+#violin
+
+```{r}
+annual_esc %>%
+    filter(year == 1974,
+           species %in% c("Chum", "Pink")) %>%
+    ggplot(aes(x = species, y = escapement)) +
+    geom_violin()
+```
+
+#customize
+
+```{r}
+ggplot(annual_esc,
+       aes(x = species, y = escapement,
+           fill = "green")) +
+    geom_col()
+```
+
+#again, the fill inside the geom_caol
+
+```{r}
+ggplot(annual_esc,
+       aes(x = species, y = escapement)) +
+    geom_col(fill = "green")
+
+```
+
+# add colors with the regions
+
+```{r}
+ggplot(annual_esc,
+       aes(x = species, y = escapement,
+           fill = sasap_region)) +
+    geom_col()
+```
+#multiple plots first see the data
+```{r}
+
+## Subset with data from years 2000 to 2016
+
+annual_esc_2000s <- annual_esc %>%
+    filter(year %in% c(2000:2016))
+
+## Quick check
+unique(annual_esc_2000s$year)
+```
+```{r}
+ggplot(annual_esc_2000s,
+       aes(x = year,
+           y = escapement,
+           color = species)) +
+    geom_line() +
+    geom_point() +
+    facet_wrap( ~ sasap_region,
+                scales = "free_y")
+```
+#setting themes
+```{r}
+ggplot(annual_esc_2000s,
+       aes(x = year,
+           y = escapement,
+           color = species)) +
+    geom_line() +
+    geom_point() +
+    facet_wrap( ~ sasap_region,
+                scales = "free_y") +
+    labs(title = "Annual Salmon Escapement by Region",
+         y = "Escapement") +
+    theme_bw()
+```
+#ggplot themes
+## Useful baseline themes are
+```{r}
+## Useful baseline themes are
+theme_minimal()
+theme_light()
+theme_classic()
+```
+
+
+```{r}
+ggplot(annual_esc_2000s,
+       aes(x = year,
+           y = escapement,
+           color = species)) +
+    geom_line() +
+    geom_point() +
+    facet_wrap( ~ sasap_region,
+                scales = "free_y") +
+    labs(title = "Annual Salmon Escapement by Region",
+         y = "Escapement") +
+    theme_light() +
+    theme(legend.position = "bottom",
+          legend.title = element_blank())
+```
+
+```{r}
+ggplot(annual_esc_2000s,
+       aes(x = year,
+           y = escapement,
+           color = species)) +
+    geom_line() +
+    geom_point() +
+    facet_wrap( ~ sasap_region,
+                scales = "free_y") +
+    labs(title = "Annual Salmon Escapement by Region",
+         y = "Escapement") +
+    theme_classic() +
+    theme(legend.position = "bottom",
+          legend.title = element_blank())
+```
+```{r}
+ggplot(annual_esc_2000s,
+       aes(x = year,
+           y = escapement,
+           color = species)) +
+    geom_line() +
+    geom_point() +
+    facet_wrap( ~ sasap_region,
+                scales = "free_y") +
+    labs(title = "Annual Salmon Escapement by Region",
+         y = "Escapement") +
+    theme_minimal() +
+    theme(legend.position = "bottom",
+          legend.title = element_blank())
+```
+```{r}
+my_theme <- theme_light() +
+    theme(legend.position = "bottom",
+          legend.title = element_blank())
+```
+
+```{r}
+ggplot(annual_esc_2000s,
+       aes(x = year,
+           y = escapement,
+           color = species)) +
+    geom_line() +
+    geom_point() +
+    facet_wrap( ~ sasap_region,
+                scales = "free_y") +
+    labs(title = "Annual Salmon Escapement by Region",
+         y = "Escapement") +
+    my_theme
+```
+
+#exercise
+
+```{r}
+## Useful baseline themes are
+ggplot(annual_esc_2000s,
+       aes(x = year,
+           y = escapement,
+           color = species)) +
+    geom_line() +
+    geom_point() +
+    scale_x_continuous(breaks = seq(2000, 2016, 2)) +
+    facet_wrap( ~ sasap_region,
+                scales = "free_y") +
+    labs(title = "Annual Salmon Escapement by Region",
+         y = "Escapement") +
+    my_theme +
+    guides(x=guide_axis(angle = 45))
+```
+
+#smarter tick labels 
+
+```{r}
+ggplot(annual_esc_2000s,
+       aes(x = year,
+           y = escapement,
+           color = species)) +
+    geom_line() +
+    geom_point() +
+    scale_x_continuous(breaks = seq(2000, 2016, 2),
+        guide=guide_axis(angle = 45)) +
+    scale_y_continuous(labels = comma) +
+    facet_wrap( ~ sasap_region,
+                scales = "free_y") +
+    labs(title = "Annual Salmon Escapement by Region",
+         y = "Escapement") +
+    my_theme
+```
+#or
+
+```{r}
+ggplot(annual_esc_2000s,
+       aes(x = year,
+           y = escapement,
+           color = species)) +
+    geom_line() +
+    geom_point(size=1) +
+    scale_x_continuous("Year",
+        breaks = seq(2000, 2016, 4),
+        guide = guide_axis(angle = 45)) +
+    scale_y_continuous("Escapement",
+        label = label_comma(scale_cut = cut_short_scale())) +
+    facet_wrap( ~ sasap_region, scales = "free_y",
+        labeller = labeller(sasap_region = label_wrap_gen())) +
+    labs(title = "Annual Salmon Escapement by Region") +
+    my_theme
+```
+#save
+
+```{r}
+ggsave("plots/annualsalmon_esc_region.jpg", width = 8, height = 6, units = "in")
+```
+#interactive visualisation
+
+```{r}
+library(DT) # interactive tables
+```
+
+
+```{r}
+locations <- escape %>%
+    distinct(location, latitude, longitude) %>%
+    drop_na()
+```
+
+```{r}
+datatable(locations)
+```
+
+
+#maps with leaflets
+
+```{r}
+library(leaflet) # interactive maps
+```
+
+```{r}
+leaflet(locations) %>%
+    addTiles() %>%
+    addMarkers(
+        lng = ~ longitude,
+        lat = ~ latitude,
+        popup = ~ location
+    )
+```
+
+```{r}
+leaflet(locations) %>%
+    addWMSTiles(
+        "https://www.gebco.net/data_and_products/gebco_web_services/web_map_service/mapserv?request=getmap&service=wms&BBOX=-90,-180,90,360&crs=EPSG:4326&format=image/jpeg&layers=gebco_latest&width=1200&height=600&version=1.3.0",
+        layers = 'GEBCO_LATEST',
+        attribution = "Imagery reproduced from the GEBCO_2022 Grid, WMS 1.3.0 GetMap, www.gebco.net"
+    ) %>%
+    addCircleMarkers(
+        lng = ~ longitude,
+        lat = ~ latitude,
+        popup = ~ location,
+        radius = 5,
+        # set fill properties
+        fillColor = "salmon",
+        fillOpacity = 1,
+        # set stroke properties
+        stroke = TRUE,
+        weight = 0.5,
+        color = "white",
+        opacity = 1
+    )
+```
+
