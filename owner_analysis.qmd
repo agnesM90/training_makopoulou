@@ -34,3 +34,9 @@ library(tidyr)
 library(here)
 ```
 
+#read the data
+```{r}
+lobster_abundance <- read_csv("practice session/data/Lobster_Abundance_All_Years_20220829.csv")
+```
+
+```
