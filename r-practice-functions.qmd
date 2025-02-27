@@ -51,3 +51,28 @@ species <- tbls[[1]] %>%
 head(species, 3)
 ```
 
+#exercise
+```{r}
+## When reading from a file in your data folder in your Rpoj
+nest_data <-  read_csv("data/Utqiagvik_nest_data.csv")
+
+predator_survey <- read_csv("data/Utqiagvik_predator_surveys.csv")
+
+egg_measures <- read_csv("data/Utqiagvik_egg_measurements.csv")
+
+
+## When reading using the url
+nest_data <-  read_csv("https://arcticdata.io/metacat/d1/mn/v2/object/urn%3Auuid%3A982bd2fc-4edf-4da7-96ef-0d11b853102d")
+
+predator_survey <- read_csv("https://arcticdata.io/metacat/d1/mn/v2/object/urn%3Auuid%3A9ffec04c-7e2d-41dd-9e88-b6c2e8c4375e")
+
+egg_measures <- read_csv("https://arcticdata.io/metacat/d1/mn/v2/object/urn%3Auuid%3A4b219711-2282-420a-b1d6-1893fe4a74a6")
+
+## Exploring the data (these functions can also be used to explore nest_data & egg_measures) 
+
+colnames(predator_survey)
+glimpse(predator_survey)
+unique(predator_survey$species)
+summary(predator_survey)
+```
+
