@@ -1,0 +1,319 @@
+---
+title: "Intro to leaflet"
+format: html
+editor: visual
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
+
+```{r}
+knb_url <- "https://dev.nceas.ucsb.edu/knb/d1/mn/v2/object/urn%3Auuid%3Aaceaecb2-1ce0-4d41-a839-d3607d32bb58"
+
+download.file(url = knb_url, destfile = here( 'shapefile_demo_data.zip'))
+
+unzip('shapefile_demo_data.zip', exdir = gere('data'))
+
+file.remove(here('shapefile_demo_data.zip'))
+```
+```{r}
+library(readr)
+library(here)
+library(sf)
+library(leaflet)
+library(scales)
+library(ggplot2)
+library(ggspatial)
+library(dplyr)
+
+```
+```{r}
+knb_url <- "https://dev.nceas.ucsb.edu/knb/d1/mn/v2/object/urn%3Auuid%3Aaceaecb2-1ce0-4d41-a839-d3607d32bb58"
+
+download.file(url = knb_url, destfile = here('shapefile_demo_data.zip'))
+
+unzip(here('shapefile_demo_data.zip'), exdir = here('data'))
+
+file.remove(here('shapefile_demo_data.zip'))
+```
+#exploring data with plot() ans st_crs()
+```{r}
+# read in shapefile using read_sf()
+ak_rgns_sf <- read_sf(here("data/ak_regions_simp.shp"))
+
+plot(ak_rgns_sf)
+```
+##examine class
+```{r}
+class(ak_rgns_sf)
+```
+```{r}
+head(ak_rgns_sf)
+```
+
+```{r}
+glimpse(ak_rgns_sf)
+```
+##coordinates
+```{r}
+st_crs(ak_rgns_sf)
+```
+
+#transform coordinates to another
+```{r}
+ak_rgns_3338_sf <- ak_rgns_sf %>%
+    st_transform(crs = 3338)
+
+st_crs(ak_rgns_3338_sf)
+```
+
+#plot
+```{r}
+plot(ak_rgns_3338_sf)
+```
+#select
+```{r}
+# returns the names of all the columns in dataset
+colnames(ak_rgns_3338_sf)
+```
+```{r}
+ak_rgns_3338_sf %>%
+    select(region)
+
+ak_rgns_3338_sf %>%
+  filter(region=="Southeast")
+```
+##read data
+```{r}
+pop_df <- read_csv(here("data/alaska_population.csv"))
+
+head(pop_df)
+```
+
+#convert data frame to a spatial object
+```{r}
+pop_4326_sf <- st_as_sf(pop_df,
+                        coords = c('lng', 'lat'),
+                        crs = 4326,
+                        remove = F)
+
+head(pop_4326_sf)
+```
+#Join population data with Alaska regions data 
+```{r}
+pop_joined_sf <- st_join(pop_4326_sf, 
+                         ak_rgns_3338_sf, 
+                         join = st_within)
+```
+#change the coordinates
+```{r}
+pop_3338_sf <- st_transform(pop_4326_sf, 
+                            crs = 3338)
+```
+
+#and then join the data
+```{r}
+pop_joined_sf <- st_join(pop_3338_sf, 
+                         ak_rgns_3338_sf, 
+                         join = st_within)
+
+head(pop_joined_sf)
+```
+#calulate the total population by region
+```{r}
+pop_rgn_df <- pop_joined_sf %>%
+    st_drop_geometry() %>%
+    group_by(region) %>%
+    summarize(total_pop = sum(population))
+
+head(pop_rgn_df)
+```
+#join to ge the alaska 
+```{r}
+pop_rgn_3338_sf <- left_join(ak_rgns_3338_sf, 
+                             pop_rgn_df, 
+                             by = "region")#joined by the column region 
+
+# plot to check
+plot(pop_rgn_3338_sf["total_pop"])
+```
+#plot population by management area
+```{r}
+pop_mgmt_3338_sf <- pop_rgn_3338_sf %>%
+    group_by(mgmt_area) %>%
+    summarize(total_pop = sum(total_pop))
+
+plot(pop_mgmt_3338_sf["total_pop"])
+```
+#if we don't want to combine geometry then do_union=F 
+```{r}
+pop_mgmt_3338_sf <- pop_rgn_3338_sf %>%
+    group_by(mgmt_area) %>%
+    summarize(total_pop = sum(total_pop), do_union = F)
+
+plot(pop_mgmt_3338_sf["total_pop"])
+```
+#save
+```{r}
+write_sf(pop_rgn_3338_sf, here("data/ak_regions_population.shp"))
+```
+
+##visualization by region
+```{r}
+ggplot(pop_rgn_3338_sf) +
+    geom_sf(aes(fill = total_pop)) +
+    labs(fill = "Total Population") +
+    scale_fill_continuous(low = "khaki",
+                          high =  "firebrick",
+                          labels = comma) +
+    theme_bw()
+
+ggplot(data = pop_rgn_3338_sf) +
+    geom_sf()
+
+```
+#read another file eg rivers
+```{r}
+rivers_3338_sf <- read_sf(here("data/ak_rivers_simp.shp"))
+```
+#coordinates
+```{r}
+st_crs(rivers_3338_sf)
+```
+#plot with rivers too
+```{r}
+ggplot() +
+    geom_sf(data = pop_rgn_3338_sf, 
+            aes(fill = total_pop)) +
+    geom_sf(data = pop_3338_sf, 
+            size = 0.5) +
+    geom_sf(data = rivers_3338_sf,
+            aes(linewidth = StrOrder)) +
+    scale_linewidth(range = c(0.05, 0.5),
+                    guide = "none") +
+    labs(title = "Total Population by Alaska Region",
+         fill = "Total Population") +
+    scale_fill_continuous(low = "khaki",
+                          high =  "firebrick",
+                          labels = comma) +
+    theme_bw() 
+```
+#add basemap
+
+```{r}
+pop_3857_sf <- st_transform(pop_3338_sf, 
+                         crs = 3857)
+```
+
+```{r}
+ggplot(data = pop_3857_sf) +
+    ggspatial::annotation_map_tile(type = "osm", zoom = 4, progress = 'none') + # higher zoom values are more detailed 
+    geom_sf(aes(color = population),
+            fill = NA) +
+    scale_color_continuous(low = "darkkhaki",
+                           high =  "firebrick",
+                           labels = comma)
+```
+
+#interactive map with leaflet
+```{r}
+epsg3338 <- leaflet::leafletCRS(
+    crsClass = "L.Proj.CRS",
+    code = "EPSG:3338",
+    proj4def =  "+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs",
+    resolutions = 2 ^ (16:7)
+)
+```
+
+```{r}
+st_crs(pop_rgn_3338_sf)
+```
+
+#transform to wgs84
+```{r}
+pop_rgn_4326_sf <- pop_rgn_3338_sf %>% 
+    st_transform(crs = 4326)
+```
+
+```{r}
+m <- leaflet(options = leafletOptions(crs = epsg3338)) %>%
+    addPolygons(data = pop_rgn_4326_sf,
+                fillColor = "gray",
+                weight = 1)
+
+m
+```
+#add legend and labels
+```{r}
+pal <- colorNumeric(palette = "Reds", domain = pop_rgn_4326_sf$total_pop)
+
+m <- leaflet(options = leafletOptions(crs = epsg3338)) %>%
+    addPolygons(
+        data = pop_rgn_4326_sf,
+        fillColor = ~ pal(total_pop),
+        weight = 1,
+        color = "black",
+        fillOpacity = 1,
+        label = ~ region
+    ) %>%
+    addLegend(
+        position = "bottomleft",
+        pal = pal,
+        values = range(pop_rgn_4326_sf$total_pop),
+        title = "Total Population"
+    )
+
+m
+```
+#add communities and pop up labels
+```{r}
+pal <- colorNumeric(palette = "Reds", domain = pop_rgn_4326_sf$total_pop)
+
+m <- leaflet(options = leafletOptions(crs = epsg3338)) %>%
+    addPolygons(
+        data = pop_rgn_4326_sf,
+        fillColor = ~ pal(total_pop),
+        weight = 1,
+        color = "black",
+        fillOpacity = 1
+    ) %>%
+    addCircleMarkers(
+        data = pop_4326_sf,
+        lat = ~ lat,
+        lng = ~ lng,
+        radius = ~ log(population / 500),
+        # arbitrary scaling
+        fillColor = "gray",
+        fillOpacity = 1,
+        weight = 0.25,
+        color = "black",
+        label = ~ paste0(pop_4326_sf$city, ", population ", comma(pop_4326_sf$population))
+    ) %>%
+    addLegend(
+        position = "bottomleft",
+        pal = pal,
+        values = range(pop_rgn_4326_sf$total_pop),
+        title = "Total Population"
+    )
+
+m
+```
+
